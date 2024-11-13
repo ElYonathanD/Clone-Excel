@@ -11,18 +11,32 @@ body{
   thead, tr td:first-child {
     background: rgb(228, 228, 228);
   }
-  tr td:first-child {
-    width: 23px;
-  }
   th, td{
     border: 1px solid rgb(175, 174, 174);
     font-weight: normal;
     font-size: 14px;
     text-align: center;
+    position: relative;
+    width: 70px;
+    height: 30px;
   }
-  td input{
-    border: 0;
-    pointer-events: none;
-    width: 100%;
+  tbody{
+    span, input{
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    td input{
+      border: 0;
+      pointer-events: none;
+      width: 100%;
+      opacity: 0;
+      &:focus{
+        opacity: 1;
+        border: 1px solid black;
+      }
+    }
   }
 }
