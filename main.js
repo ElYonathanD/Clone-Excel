@@ -1,5 +1,5 @@
-let ROWS = 3
-let COLUMNS = 5
+let ROWS = 5
+let COLUMNS = 10
 const LETTER_CODE = 65
 
 const tableEl = document.querySelector('#table')
@@ -13,7 +13,8 @@ let STATE = range(COLUMNS).map(() =>(
   range(ROWS).map((row) => ({computedValue: '', value: ''}))
 ))
 
-let selectedColumn
+let selectedColumn = null
+let selectedRow = null
 const computeValue = (value, constants) =>{
   // if(typeof value === 'number') return value
   if(!value.startsWith('=')) return value
@@ -109,7 +110,6 @@ bodyTableEl.addEventListener('click', (e) =>{
   document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'))
   input.addEventListener('blur', () =>{
     if(input.value === STATE[x][y].value) return
-
     updateCell({ x, y, value: input.value})
   }, { once: true })
 
@@ -125,19 +125,36 @@ headTableEl.addEventListener('click', (e) =>{
 
   const x = [...th.parentNode.children].indexOf(th)
   if(x <= 0) return
-
+  selectedRow = null
   selectedColumn = x - 1
   document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'))
   th.classList.add('selected')
   document.querySelectorAll(`tr td:nth-child(${x + 1})`).forEach(el => el.classList.add('selected'))
 })
-
+bodyTableEl.addEventListener('click', (e) =>{
+  const td = e.target.closest('td')
+  if(!td) return
+  const indexTd = [...td.parentNode.children].indexOf(td)
+  if(indexTd !== 0) return
+  selectedColumn = null
+  const tr = td.closest('tr')
+  selectedRow = [...tr.parentNode.children].indexOf(tr)
+  document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'))
+  tr.querySelectorAll('td').forEach(el =>el.classList.add('selected') ) 
+})
 document.addEventListener('keydown', (e) =>{
   if(e.key === 'Backspace' && selectedColumn !== null){
     range(ROWS).forEach(row => {
       updateCell({x: selectedColumn, y: row, value: ''})
     })
     selectedColumn = null
+    renderSpreadSheet()
+  }
+  if(e.key === 'Backspace' && selectedRow !== null){
+    range(ROWS).forEach(row => {
+      updateCell({x: row, y: selectedRow, value: ''})
+    })
+    selectedRow = null
     renderSpreadSheet()
   }
 })
@@ -150,5 +167,13 @@ document.addEventListener('copy', (e) => {
     e.clipboardData.setData('text/plain', columnValues.join('\n'))
     e.preventDefault()
   }
-})// todo rows
+  if(selectedRow != null){
+    const rowsValues = []
+    range(COLUMNS).forEach(column => {
+      rowsValues.push(STATE[column][selectedRow].computedValue)
+    })
+    e.clipboardData.setData('text/plain', rowsValues.join(' '))
+    e.preventDefault()
+  }
+})
 renderSpreadSheet()

@@ -20,7 +20,7 @@ body{
     width: 70px;
     height: 30px;
     &.selected{
-      background-color: rgba(160, 241, 160, 0.692);
+      background-color: rgba(160, 241, 160, 0.692) !important;
     }
   }
   tbody{
