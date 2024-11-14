@@ -10,9 +10,10 @@ const range = (length) => Array.from({ length }, (_, i) => i)
 const getColumn = (codeLetter) => String.fromCharCode(codeLetter)// todo: después de la z el AA AB...
 
 let STATE = range(COLUMNS).map(() =>(
-  range(ROWS).map((row) => ({computedValue: 0, value: 0}))
+  range(ROWS).map((row) => ({computedValue: '', value: ''}))
 ))
 
+let selectedColumn
 const computeValue = (value, constants) =>{
   // if(typeof value === 'number') return value
   if(!value.startsWith('=')) return value
@@ -58,11 +59,18 @@ const renderSpreadSheet = () =>{
 
 
 const generateCellsConstants = (cells) => {
+  const regexString = /[A-Za-z]/
   return cells.map((rows, x) => {
     return rows.map((cell, y) =>{
       const letter = getColumn(LETTER_CODE + x)
       const cellId = `${letter}${y + 1}`
-      return `const ${cellId} = ${cell.computedValue}`
+      let value
+      if(regexString.test(cell.computedValue)){
+        value = `'${cell.computedValue}'` || ''
+      }else{
+        value = `${cell.computedValue}` || 0
+      }
+      return `const ${cellId} = ${value}`
     }).join(';')
   }).join(';')
 } 
@@ -95,10 +103,10 @@ bodyTableEl.addEventListener('click', (e) =>{
   
   const { x, y } = td.dataset
   const input = td.querySelector('input')
-  const span = td.querySelector('span')
-
+  if(!input) return
   input.setSelectionRange(input.value.length, input.value.length)
   input.focus()
+  document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'))
   input.addEventListener('blur', () =>{
     if(input.value === STATE[x][y].value) return
 
@@ -111,4 +119,36 @@ bodyTableEl.addEventListener('click', (e) =>{
     }
   })
 })
+headTableEl.addEventListener('click', (e) =>{
+  const th = e.target.closest('th')
+  if(!th) return
+
+  const x = [...th.parentNode.children].indexOf(th)
+  if(x <= 0) return
+
+  selectedColumn = x - 1
+  document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'))
+  th.classList.add('selected')
+  document.querySelectorAll(`tr td:nth-child(${x + 1})`).forEach(el => el.classList.add('selected'))
+})
+
+document.addEventListener('keydown', (e) =>{
+  if(e.key === 'Backspace' && selectedColumn !== null){
+    range(ROWS).forEach(row => {
+      updateCell({x: selectedColumn, y: row, value: ''})
+    })
+    selectedColumn = null
+    renderSpreadSheet()
+  }
+})
+document.addEventListener('copy', (e) => {
+  if(selectedColumn != null){
+    const columnValues = []
+    range(ROWS).forEach(row => {
+      columnValues.push(STATE[selectedColumn][row].computedValue)
+    })
+    e.clipboardData.setData('text/plain', columnValues.join('\n'))
+    e.preventDefault()
+  }
+})// todo rows
 renderSpreadSheet()

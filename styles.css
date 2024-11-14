@@ -19,6 +19,9 @@ body{
     position: relative;
     width: 70px;
     height: 30px;
+    &.selected{
+      background-color: rgba(160, 241, 160, 0.692);
+    }
   }
   tbody{
     span, input{
