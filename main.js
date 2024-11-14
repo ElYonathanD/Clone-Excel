@@ -5,7 +5,6 @@ const LETTER_CODE = 65
 const tableEl = document.querySelector('#table')
 const headTableEl = tableEl.querySelector('#table thead')
 const bodyTableEl = tableEl.querySelector('#table tbody')
-
 const range = (length) => Array.from({ length }, (_, i) => i)
 const getColumn = (codeLetter) => String.fromCharCode(codeLetter)// todo: después de la z el AA AB...
 
@@ -28,7 +27,7 @@ const computeValue = (value, constants) =>{
         })()
     `)
   }catch(e){
-    computedValue = 'ERROR' + e
+    computedValue = 'ERROR'
   }
   return computedValue
 }
@@ -38,26 +37,27 @@ const renderSpreadSheet = () =>{
     <tr>
       <th>
       </th>
-      ${range(COLUMNS).map(i => `<th>${getColumn(LETTER_CODE + i)}</th>`).join('')}
+      ${range(COLUMNS).map(i => `<th>${getColumn(LETTER_CODE + i)}<span class="resizer"></span></th>`).join('')}
     </tr>
     `
   headTableEl.innerHTML = headerHtml
   const bodyHtml = range(ROWS).map(row => {
     return `
       <tr>
-        <td>${row + 1}</td>
+        <td>${row + 1} <span class="resizer"></span></td>
         ${range(COLUMNS).map(column => `
             <td data-x="${column}" data-y="${row}">
               <span>${STATE[column][row].computedValue}</span>
               <input type="text" value="${STATE[column][row].value}">
+              
             </td>
           `).join('')}
       </tr>
     `
   }).join('')
   bodyTableEl.innerHTML = bodyHtml
+  
 }
-
 
 const generateCellsConstants = (cells) => {
   const regexString = /[A-Za-z]/
@@ -177,3 +177,35 @@ document.addEventListener('copy', (e) => {
   }
 })
 renderSpreadSheet()
+const resizers = document.querySelectorAll('.resizer');
+
+resizers.forEach(resizer => {
+  resizer.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    
+    const element = e.target.closest('th') || e.target.closest('td');
+    if (!element) return;
+
+    const isWidthResize = element.tagName === 'TH';
+    const startCoordinate = isWidthResize ? e.clientX : e.clientY;
+    const startSize = isWidthResize ? element.offsetWidth : element.offsetHeight;
+
+    const resize = (e) => {
+      const delta = (isWidthResize ? e.clientX : e.clientY) - startCoordinate;
+      const newSize = startSize + delta;
+      if (isWidthResize) {
+        element.style.width = newSize + 'px';
+      } else {
+        element.style.height = newSize + 'px';
+      }
+    };
+
+    const stopResize = () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResize);
+    };
+
+    window.addEventListener('mousemove', resize);
+    window.addEventListener('mouseup', stopResize);
+  });
+});
